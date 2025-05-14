@@ -15,13 +15,79 @@ data class Comments(
     val canOpen: Boolean = false
 )
 
+sealed class Attachment(val type: String)
+
+data class Photo(
+    val id: Int,
+    val text: String,
+    val date: Int,
+    val width: Int,
+    val height: Int
+)
+
+data class Audio(
+    val id: Int,
+    val artist: String,
+    val title: String,
+    val duration: Int /*продолжительность*/
+
+)
+
+data class Video(
+    val id: Int,
+    val title: String,
+    val duration: Int,
+    val views: Int
+)
+
+
+data class File(
+    val id: Int,
+    val title: String,
+    val size: Int,
+    val ext: String,
+    val type: Int
+) {
+    fun getDocumentType(): String {
+        return when (type) {
+            1 -> "текстовые документы"
+            2 -> "архивы"
+            3 -> "gif"
+            4 -> "изображение"
+            5 -> "аудио"
+            6 -> "видео"
+            7 -> "электронные книги"
+            else -> "неизвестно"
+        }
+    }
+}
+
+data class Sticker(
+    val innerType: String,
+    val productInt: Int,
+    val isAllowed: Boolean = false
+
+)
+
+data class PhotoAttachment(val photo: Photo) : Attachment("photo")
+
+data class AudioAttachment(val audio: Audio) : Attachment("audio")
+data class VideoAttachment(val video: Video) : Attachment("video")
+
+
+data class FileAttachment(val file: File) : Attachment("file")
+
+data class StickerAttachment(val sticker: Sticker) : Attachment("sticker")
+
+
 data class Post(
     val id: Int,
     val date: Int,
-    val fromId: Int,
-    val text: String,
+    val fromId: Int?,
+    val text: String?,
     val likes: Likes,
-    val comments: Comments
+    val comments: Comments,
+    val attachments: Array<Attachment> = emptyArray()
 
 )
 
@@ -69,6 +135,20 @@ object WallService {
     }
 }
 
+fun printPost(post: Post) {
+    val text = post.text ?: "[без текста]"
+    val author = post.fromId ?: 0
+    println("Post(id=${post.id}, fromId=$author, text=$text, likes=${post.likes.count})")
+
+    if (post.attachments.isNotEmpty()) {
+        println("Вложения:")
+        post.attachments.forEach { attachment ->
+            println("— ${attachment.type}")
+        }
+    }
+
+}
+
 
 fun main() {
     WallService.clear()
@@ -82,15 +162,34 @@ fun main() {
     val post2 = Post(0, 124, 46, "Второй пост", likes, comments)
     val added2 = WallService.add(post2)
 
+    val post3 = Post(0, 124, null, null, likes, comments)
+    val added3 = WallService.add(post3)
+
     println("Добавленные посты:")
-    println(added1)
-    println(added2)
-    println("---------------")
+    printPost(added1)
+    printPost(added2)
+    printPost(added3)
 
     val updatedPost2 = added2.copy(text = "Обновлённый второй пост", likes = Likes(100))
     val updateResult = WallService.update(updatedPost2)
-
     println("Результат обновления второго поста: $updateResult")
+
+
+    val photo = Photo(1, "Всем приветик", 123, 800, 600)
+    val photoAttachment = PhotoAttachment(photo)
+
+    val postWithAttachment = Post(
+        id = 0,
+        date = 127,
+        fromId = 20,
+        text = "Пост с вложением",
+        likes = likes,
+        comments = comments,
+        attachments = arrayOf(photoAttachment)
+    )
+
+    val added4 = WallService.add(postWithAttachment)
+    printPost(added4)
 
 
 }
