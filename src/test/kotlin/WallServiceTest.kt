@@ -1,4 +1,3 @@
-
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -35,5 +34,24 @@ class WallServiceTest {
         val result = WallService.update(fakePost)
 
         assertFalse(result)
+    }
+
+    @Test
+    fun createCommentExistPost() {
+        WallService.clear()
+        val post = WallService.add(Post(0, 123, 1, "Тестовый пост", Likes(0), Comments(0)))
+        val comment = Comment(1233, 4648, 3,"Текст", null, null)
+        val result =  WallService.createComment(post.id, comment)
+
+        assertEquals(comment, result)
+
+    }
+
+    @Test(expected = PostNotFoundException::class)
+    fun throwWhenPostNotFound() {
+        WallService.clear()
+
+        val comment = Comment(1, 42, 1680000000, "Комментарий")
+        WallService.createComment(postId = 999, comment)
     }
 }

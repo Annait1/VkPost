@@ -1,4 +1,4 @@
-import kotlin.coroutines.coroutineContext
+import java.lang.RuntimeException
 
 data class Likes(
     val count: Int,
@@ -79,6 +79,17 @@ data class FileAttachment(val file: File) : Attachment("file")
 
 data class StickerAttachment(val sticker: Sticker) : Attachment("sticker")
 
+data class Comment(
+    val id: Int,
+    val fromId: Int,
+    val date: Int,
+    val text: String,
+    val replyToUser: Int? = null,
+    val replyToComment: Int? = null
+)
+
+class PostNotFoundException(message: String) : RuntimeException(message)
+
 
 data class Post(
     val id: Int,
@@ -94,6 +105,7 @@ data class Post(
 object WallService {
     private var posts = emptyArray<Post>()
     private var nextId = 1
+    private var comments = emptyArray<Comment>()
     fun add(post: Post): Post {
         val newPost = post.copy(id = nextId++)
         posts += newPost
@@ -133,7 +145,26 @@ object WallService {
 
         return false
     }
+
+    fun createComment(postId: Int, comment: Comment): Comment {
+        var postExists = false
+
+        for (post in posts) {
+            if ((post.id == postId)) {
+                postExists = true
+                break
+            }
+
+        }
+        if (!postExists) {
+            throw PostNotFoundException(" Пост с id=$postId не найден")
+        }
+        comments += comment
+        return comment
+    }
+
 }
+
 
 fun printPost(post: Post) {
     val text = post.text ?: "[без текста]"
@@ -190,6 +221,20 @@ fun main() {
 
     val added4 = WallService.add(postWithAttachment)
     printPost(added4)
+
+    val comment = Comment(
+        id = 1,
+        fromId = 42,
+        date = 1680000000,
+        text = "Супер!",
+        replyToUser = null,
+        replyToComment = null
+    )
+
+    println("---------------------")
+
+    val newComment = WallService.createComment(added2.id, comment)
+    println("Комментарий: ${newComment.text}")
 
 
 }
