@@ -88,8 +88,13 @@ data class Comment(
     val replyToComment: Int? = null
 )
 
-class PostNotFoundException(message: String) : RuntimeException(message)
+class PostNotFoundException(message: String) : RuntimeException()
 
+/*
+data class GenericPair<A, B>(var first: A, var second: B)
+
+var GenericPair
+*/
 
 data class Post(
     val id: Int,
